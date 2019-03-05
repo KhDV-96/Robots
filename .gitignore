@@ -1,4 +1,6 @@
-/.metadata
-/robots/.settings
-/robots/bin
-eclipse.bat
+# IntelliJ
+.idea/
+*.iml
+
+# Bytecode
+target/
