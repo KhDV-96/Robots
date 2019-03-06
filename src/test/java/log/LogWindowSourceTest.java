@@ -2,7 +2,10 @@ package log;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class LogWindowSourceTest {
 
@@ -33,5 +36,51 @@ class LogWindowSourceTest {
             lws.append(null, null);
 
         assertEquals(expectedSize, lws.size());
+    }
+
+    @Test
+    void rangeNegativeStartFromValue() {
+        var lws = new LogWindowSource(10);
+        for (var i = 0; i < 5; i++)
+            lws.append(null, Integer.toString(i));
+
+        assertIterableEquals(Collections.emptyList(), lws.range(-1, 3));
+    }
+
+    @Test
+    void rangeSubset() {
+        var entries = new ArrayList<LogEntry>();
+        var lws = new LogWindowSource(10);
+        for (var i = 0; i < 5; i++) {
+            var message = Integer.toString(i);
+            entries.add(new LogEntry(null, message));
+            lws.append(null, message);
+        }
+        var expected = entries.subList(1, 4);
+
+        var actual = lws.range(1, 3);
+
+        var i = 0;
+        for (var entry : actual)
+            assertEquals(expected.get(i++).getMessage(), entry.getMessage());
+    }
+
+    @Test
+    void rangeLargeCount() {
+        var entries = new ArrayList<LogEntry>();
+        var lws = new LogWindowSource(10);
+        for (var i = 0; i < 5; i++) {
+            var message = Integer.toString(i);
+            entries.add(new LogEntry(null, message));
+            lws.append(null, message);
+        }
+
+        var actual = lws.range(0, 20);
+
+        var i = 0;
+        for (var entry : actual) {
+            assertTrue(i < entries.size());
+            assertEquals(entries.get(i++).getMessage(), entry.getMessage());
+        }
     }
 }
