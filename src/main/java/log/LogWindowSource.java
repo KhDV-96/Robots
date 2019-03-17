@@ -3,30 +3,27 @@ package log;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class LogWindowSource {
 
-    private int m_iQueueLength;
-    private ArrayDeque<LogEntry> m_messages;
-    private final ArrayList<LogChangeListener> m_listeners;
+    private final int queueLength;
+    private final ArrayDeque<LogEntry> messages;
+    private final List<LogChangeListener> listeners;
 
     public LogWindowSource(int iQueueLength) {
-        m_iQueueLength = iQueueLength;
-        m_messages = new ArrayDeque<>(iQueueLength);
-        m_listeners = new ArrayList<>();
+        queueLength = iQueueLength;
+        messages = new ArrayDeque<>(iQueueLength);
+        listeners = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void registerListener(LogChangeListener listener) {
-        synchronized (m_listeners) {
-            m_listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     public void unregisterListener(LogChangeListener listener) {
-        synchronized (m_listeners) {
-            m_listeners.remove(listener);
-        }
+        listeners.remove(listener);
     }
 
     public void append(LogLevel logLevel, String strMessage) {
@@ -35,32 +32,41 @@ public class LogWindowSource {
     }
 
     public int size() {
-        return m_messages.size();
+        synchronized (messages) {
+            return messages.size();
+        }
     }
 
     public Iterable<LogEntry> range(int startFrom, int count) {
         if (startFrom < 0) {
             return Collections.emptyList();
         }
-        return m_messages.stream()
-                .skip(startFrom)
-                .limit(count)
-                .collect(Collectors.toList());
+        synchronized (messages) {
+            return messages.stream()
+                    .skip(startFrom)
+                    .limit(count)
+                    .collect(Collectors.toList());
+        }
     }
 
     public Iterable<LogEntry> all() {
-        return m_messages.clone();
+        synchronized (messages) {
+            return messages.clone();
+        }
     }
 
     private void addEntry(LogLevel logLevel, String strMessage) {
-        if (m_messages.size() == m_iQueueLength)
-            m_messages.poll();
-        m_messages.add(new LogEntry(logLevel, strMessage));
+        synchronized (messages) {
+            if (messages.size() == queueLength) {
+                messages.poll();
+            }
+            messages.add(new LogEntry(logLevel, strMessage));
+        }
     }
 
     private void notifyListeners() {
-        synchronized (m_listeners) {
-            for (var listener : m_listeners) {
+        synchronized (listeners) {
+            for (var listener : listeners) {
                 listener.onLogChanged();
             }
         }
