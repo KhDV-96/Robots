@@ -3,16 +3,10 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import log.Logger;
 
@@ -32,7 +26,7 @@ public class MainApplicationFrame extends JFrame {
         setBounds(inset, inset, screenSize.width - inset * 2, screenSize.height - inset * 2);
 
         setContentPane(desktopPane);
-
+        //addWindowListener(e -> windowClosing(e));
 
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
@@ -117,6 +111,8 @@ public class MainApplicationFrame extends JFrame {
         return menuBar;
     }
 
+
+
     private void setUpMenu(JMenu menu, String description){
         menu.setMnemonic(KeyEvent.VK_V);
         menu.getAccessibleContext().setAccessibleDescription(description);
@@ -137,6 +133,15 @@ public class MainApplicationFrame extends JFrame {
         return item;
     }
 
+    private void windowClosing(WindowEvent e) {
+        int confirmed = JOptionPane.showConfirmDialog(null,
+                "Are you sure you want to exit the program?",
+                "Exit Program Message Box", JOptionPane.YES_NO_OPTION);
+
+        if (confirmed == JOptionPane.YES_OPTION) {
+            dispose();
+        }
+    }
 
     private void setLookAndFeel(String className) {
         try {
