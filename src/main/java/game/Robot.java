@@ -9,8 +9,8 @@ public class Robot {
     private static final double MAX_VELOCITY = 0.1;
     private static final double MAX_ANGULAR_VELOCITY = 0.001;
 
-    private Point position, target;
-    private double direction;
+    private volatile Point position, target;
+    private volatile double direction;
 
     public Robot(double x, double y, double direction) {
         this.position = new Point(x, y);
@@ -42,8 +42,9 @@ public class Robot {
     private double shiftCoordinate(double coordinate, double velocity, double angle,
                                    Function<Double, Double> f1, Function<Double, Double> f2) {
         var newCoordinate = coordinate + velocity * (f1.apply(angle) - f1.apply(direction));
-        if (Double.isFinite(newCoordinate))
+        if (Double.isFinite(newCoordinate)) {
             return newCoordinate;
+        }
         return coordinate + MAX_VELOCITY * DURATION + f2.apply(direction);
     }
 

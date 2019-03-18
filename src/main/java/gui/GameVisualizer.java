@@ -14,7 +14,7 @@ import static java.lang.Math.round;
 
 public class GameVisualizer extends JPanel {
 
-    private volatile Robot robot;
+    private final Robot robot;
 
     GameVisualizer() {
         robot = new Robot(100, 100, 0);
