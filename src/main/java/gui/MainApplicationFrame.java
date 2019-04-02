@@ -3,6 +3,8 @@ package gui;
 import log.Logger;
 
 import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -22,15 +24,29 @@ public class MainApplicationFrame extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                onClose();
+                onClose(() -> setDefaultCloseOperation(EXIT_ON_CLOSE));
             }
         });
 
         LogWindow logWindow = createLogWindow();
+        logWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        logWindow.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                onClose(() -> logWindow.setDefaultCloseOperation(DISPOSE_ON_CLOSE));
+            }
+        });
         addWindow(logWindow);
 
         GameWindow gameWindow = new GameWindow();
         gameWindow.setSize(400, 400);
+        gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                onClose(() -> gameWindow.setDefaultCloseOperation(DISPOSE_ON_CLOSE));
+            }
+        });
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
@@ -83,13 +99,13 @@ public class MainApplicationFrame extends JFrame {
         return menuBar;
     }
 
-    private void onClose() {
+    private void onClose(Disposable disposable) {
         int confirmed = JOptionPane.showConfirmDialog(null,
                 "Вы точно хотите выйти?",
                 "Выход", JOptionPane.YES_NO_OPTION);
 
         if (confirmed == JOptionPane.YES_OPTION) {
-            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            disposable.dispose();
         }
     }
 
@@ -101,5 +117,11 @@ public class MainApplicationFrame extends JFrame {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // just ignore
         }
+    }
+
+    @FunctionalInterface
+    public interface Disposable {
+
+        void dispose();
     }
 }
