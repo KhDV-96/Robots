@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class LogWindowSourceTest {
 
     @Test
-    void addMoreThanLenght() {
+    void addMoreThanLength() {
         var length = 5;
         var lws = new LogWindowSource(length);
 
