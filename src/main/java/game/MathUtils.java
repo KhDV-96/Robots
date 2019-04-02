@@ -4,14 +4,14 @@ class MathUtils {
 
     static final double TWO_PI = 2 * Math.PI;
 
-    static double distance(Point p1, Point p2) {
-        var diffX = p1.x - p2.x;
-        var diffY = p1.y - p2.y;
+    static double distance(double x1, double y1, double x2, double y2) {
+        var diffX = x1 - x2;
+        var diffY = y1 - y2;
         return Math.sqrt(diffX * diffX + diffY * diffY);
     }
 
-    static double angleTo(Point from, Point to) {
-        return asNormalizedRadians(Math.atan2(to.y - from.y, to.x - from.x));
+    static double angleTo(double fromX, double fromY, double toX, double toY) {
+        return Math.atan2(toY - fromY, toX - fromX);
     }
 
     static double asNormalizedRadians(double angle) {
