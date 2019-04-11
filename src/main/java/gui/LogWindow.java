@@ -8,7 +8,7 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.*;
 
-public class LogWindow extends JInternalFrame implements LogChangeListener {
+public class LogWindow extends JInternalFrame implements LogChangeListener, Disposable {
 
     private LogWindowSource logSource;
     private TextArea logContent;
@@ -38,6 +38,11 @@ public class LogWindow extends JInternalFrame implements LogChangeListener {
     @Override
     public void onLogChanged() {
         EventQueue.invokeLater(this::updateLogContent);
+    }
+
+    @Override
+    public void onDispose() {
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
     private void updateLogContent() {

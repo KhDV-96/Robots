@@ -10,50 +10,54 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class MainApplicationFrame extends JFrame {
+public class MainApplicationFrame extends JFrame implements Disposable {
 
     private static final int INSET = 50;
 
     private final JDesktopPane desktopPane = new JDesktopPane();
 
     public MainApplicationFrame() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(INSET, INSET, screenSize.width - INSET * 2, screenSize.height - INSET * 2);
 
         setContentPane(desktopPane);
+        setJMenuBar(generateMenuBar());
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                onClose(() -> setDefaultCloseOperation(EXIT_ON_CLOSE));
+                onClose(MainApplicationFrame.this);
             }
         });
 
-        LogWindow logWindow = createLogWindow();
+        var logWindow = createLogWindow();
         logWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         logWindow.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(() -> logWindow.setDefaultCloseOperation(DISPOSE_ON_CLOSE));
+                onClose(logWindow);
             }
         });
         addWindow(logWindow);
 
-        GameWindow gameWindow = new GameWindow();
+        var gameWindow = new GameWindow();
         gameWindow.setSize(400, 400);
         gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(() -> gameWindow.setDefaultCloseOperation(DISPOSE_ON_CLOSE));
+                onClose(gameWindow);
             }
         });
         addWindow(gameWindow);
-
-        setJMenuBar(generateMenuBar());
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     }
 
-    protected LogWindow createLogWindow() {
+    @Override
+    public void onDispose() {
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    private LogWindow createLogWindow() {
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
         logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
@@ -63,7 +67,7 @@ public class MainApplicationFrame extends JFrame {
         return logWindow;
     }
 
-    protected void addWindow(JInternalFrame frame) {
+    private void addWindow(JInternalFrame frame) {
         desktopPane.add(frame);
         frame.setVisible(true);
     }
@@ -100,12 +104,12 @@ public class MainApplicationFrame extends JFrame {
     }
 
     private void onClose(Disposable disposable) {
-        int confirmed = JOptionPane.showConfirmDialog(null,
+        int confirmed = JOptionPane.showConfirmDialog(this,
                 "Вы точно хотите выйти?",
                 "Выход", JOptionPane.YES_NO_OPTION);
 
         if (confirmed == JOptionPane.YES_OPTION) {
-            disposable.dispose();
+            disposable.onDispose();
         }
     }
 
@@ -117,11 +121,5 @@ public class MainApplicationFrame extends JFrame {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // just ignore
         }
-    }
-
-    @FunctionalInterface
-    public interface Disposable {
-
-        void dispose();
     }
 }
