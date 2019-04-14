@@ -31,24 +31,11 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         });
 
         var logWindow = createLogWindow();
-        logWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        logWindow.addInternalFrameListener(new InternalFrameAdapter() {
-            @Override
-            public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(logWindow);
-            }
-        });
         addWindow(logWindow);
+        setMinimumSize(logWindow.getSize());
+        Logger.debug("Протокол работает");
 
-        var gameWindow = new GameWindow();
-        gameWindow.setSize(400, 400);
-        gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
-            @Override
-            public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(gameWindow);
-            }
-        });
+        var gameWindow = createGameWindow();
         addWindow(gameWindow);
     }
 
@@ -61,10 +48,28 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
         logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
-        setMinimumSize(logWindow.getSize());
         logWindow.pack();
-        Logger.debug("Протокол работает");
+        logWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        logWindow.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                onClose(logWindow);
+            }
+        });
         return logWindow;
+    }
+
+    private GameWindow createGameWindow() {
+        var gameWindow = new GameWindow();
+        gameWindow.setSize(400, 400);
+        gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                onClose(gameWindow);
+            }
+        });
+        return gameWindow;
     }
 
     private void addWindow(JInternalFrame frame) {
@@ -118,7 +123,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
             invalidate();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+        } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
             // just ignore
         }
     }
