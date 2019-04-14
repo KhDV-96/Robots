@@ -1,6 +1,8 @@
 package gui;
 
 import log.Logger;
+import serialization.JFrameDescriber;
+import serialization.Serializer;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
@@ -9,12 +11,21 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MainApplicationFrame extends JFrame implements Disposable {
+public class MainApplicationFrame extends JFrame implements Disposable, Externalizable {
 
+    static final String SERIALIZATION_FILE = "main_frame.ser";
     private static final int INSET = 50;
 
     private final JDesktopPane desktopPane = new JDesktopPane();
+
+    private List<JInternalFrame> internalFrames = new ArrayList<>();
 
     public MainApplicationFrame() {
         var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -42,6 +53,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     @Override
     public void onDispose() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        Serializer.save(this, SERIALIZATION_FILE);
     }
 
     private LogWindow createLogWindow() {
@@ -74,6 +86,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
 
     private void addWindow(JInternalFrame frame) {
         desktopPane.add(frame);
+        internalFrames.add(frame);
         frame.setVisible(true);
     }
 
@@ -126,5 +139,17 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
             // just ignore
         }
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(new JFrameDescriber(this, internalFrames));
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        var describer = (JFrameDescriber) in.readObject();
+        describer.restoreState(this);
+        describer.restoreInternalFrames(internalFrames);
     }
 }
