@@ -1,8 +1,7 @@
 package gui;
 
 import log.Logger;
-import serialization.JFrameDescriber;
-import serialization.Serializer;
+import serialization.WindowStorage;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
@@ -11,27 +10,31 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.List;
 
-public class MainApplicationFrame extends JFrame implements Disposable, Externalizable {
+public class MainApplicationFrame extends JFrame implements Disposable {
 
-    static final String SERIALIZATION_FILE = "main_frame.ser";
     private static final int INSET = 50;
 
-    private final JDesktopPane desktopPane = new JDesktopPane();
+    private WindowStorage storage;
+    private JInternalFrame logWindow, gameWindow;
 
-    private List<JInternalFrame> internalFrames = new ArrayList<>();
+    public MainApplicationFrame(WindowStorage storage) {
+        this();
+        this.storage = storage;
+        if (storage != null && storage.isRestored()) {
+            storage.restore(this.getClass().toString(), this);
+            storage.restore(logWindow.getClass().toString(), logWindow);
+            storage.restore(gameWindow.getClass().toString(), gameWindow);
+        } else {
+            setExtendedState(Frame.MAXIMIZED_BOTH);
+            pack();
+        }
+    }
 
     public MainApplicationFrame() {
         var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(INSET, INSET, screenSize.width - INSET * 2, screenSize.height - INSET * 2);
-
-        setContentPane(desktopPane);
+        setContentPane(new JDesktopPane());
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -41,23 +44,28 @@ public class MainApplicationFrame extends JFrame implements Disposable, External
             }
         });
 
-        var logWindow = createLogWindow();
+        logWindow = createLogWindow();
         addWindow(logWindow);
         setMinimumSize(logWindow.getSize());
         Logger.debug("Протокол работает");
 
-        var gameWindow = createGameWindow();
+        gameWindow = createGameWindow();
         addWindow(gameWindow);
     }
 
     @Override
     public void onDispose() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        Serializer.save(this, SERIALIZATION_FILE);
+        if (storage != null) {
+            storage.store(this.getClass().toString(), this);
+            storage.store(logWindow.getClass().toString(), logWindow);
+            storage.store(gameWindow.getClass().toString(), gameWindow);
+            storage.save();
+        }
     }
 
     private LogWindow createLogWindow() {
-        LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
+        var logWindow = new LogWindow(Logger.getDefaultLogSource());
         logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
         logWindow.pack();
@@ -85,9 +93,7 @@ public class MainApplicationFrame extends JFrame implements Disposable, External
     }
 
     private void addWindow(JInternalFrame frame) {
-        desktopPane.add(frame);
-        internalFrames.add(frame);
-        frame.setVisible(true);
+        add(frame).setVisible(true);
     }
 
     private JMenuBar generateMenuBar() {
@@ -136,20 +142,7 @@ public class MainApplicationFrame extends JFrame implements Disposable, External
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
             invalidate();
-        } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
-            // just ignore
+        } catch (ReflectiveOperationException | UnsupportedLookAndFeelException ignored) {
         }
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject(new JFrameDescriber(this, internalFrames));
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        var describer = (JFrameDescriber) in.readObject();
-        describer.restoreState(this);
-        describer.restoreInternalFrames(internalFrames);
     }
 }

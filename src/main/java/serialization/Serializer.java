@@ -2,22 +2,25 @@ package serialization;
 
 import java.io.*;
 
-public class Serializer {
+class Serializer {
 
-    public static void save(Serializable serializable, String file) {
-        try (var out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
+    static void save(Serializable serializable, String path) {
+        try (var out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(path)))) {
             out.writeObject(serializable);
         } catch (IOException exception) {
             exception.printStackTrace();
         }
     }
 
-    public static Object load(String file) {
-        try (var in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))) {
-            return in.readObject();
-        } catch (IOException | ClassNotFoundException exception) {
-            exception.printStackTrace();
-            return null;
+    static Object load(String path) {
+        var file = new File(path);
+        if (file.isFile()) {
+            try (var in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+                return in.readObject();
+            } catch (IOException | ClassNotFoundException exception) {
+                exception.printStackTrace();
+            }
         }
+        return null;
     }
 }
