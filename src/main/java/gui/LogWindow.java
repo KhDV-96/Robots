@@ -23,7 +23,7 @@ public class LogWindow extends JInternalFrame implements LogChangeListener, Disp
 
         addInternalFrameListener(new InternalFrameAdapter() {
             @Override
-            public void internalFrameClosing(InternalFrameEvent e) {
+            public void internalFrameClosed(InternalFrameEvent e) {
                 logSource.unregisterListener(LogWindow.this);
             }
         });
