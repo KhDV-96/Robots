@@ -1,8 +1,8 @@
 package gui;
 
-import game.GameObject;
 import game.Map;
 import game.Robot;
+import game.Target;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +23,7 @@ public class GameVisualizer extends JPanel {
     GameVisualizer() {
         map = new Map(500, 500);
         map.setRobot(new Robot(100, 100, 0));
-        map.setTarget(new GameObject(150, 100));
+        map.setTarget(new Target(150, 100));
 
         var timer = new Timer("Events generator", true);
         timer.schedule(new TimerTask() {
@@ -45,7 +45,7 @@ public class GameVisualizer extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 synchronized (map) {
-                    map.setTarget(new GameObject(e.getX(), e.getY()));
+                    map.getTarget().move(e.getX(), e.getY());
                 }
                 repaint();
             }

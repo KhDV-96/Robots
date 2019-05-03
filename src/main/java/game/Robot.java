@@ -24,9 +24,11 @@ public class Robot extends GameObject {
         var target = map.getTarget();
         if (MathUtils.distance(x, y, target.x, target.y) >= RADIUS) {
             moveToTarget(target);
+            setChanged();
         }
         x = pushOffFromBorder(x, map.getWidth(), MathUtils.TWO_PI);
         y = pushOffFromBorder(y, map.getHeight(), Math.PI);
+        notifyObservers();
     }
 
     private void moveToTarget(GameObject target) {

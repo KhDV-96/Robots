@@ -4,7 +4,7 @@ public class Map {
 
     private int width, height;
     private Robot robot;
-    private GameObject target;
+    private Target target;
 
     public Map(int width, int height) {
         this.width = width;
@@ -39,11 +39,11 @@ public class Map {
         this.robot = robot;
     }
 
-    public GameObject getTarget() {
+    public Target getTarget() {
         return target;
     }
 
-    public void setTarget(GameObject target) {
+    public void setTarget(Target target) {
         this.target = target;
     }
 }
