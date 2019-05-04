@@ -2,6 +2,7 @@ package game;
 
 import java.util.Observable;
 
+@SuppressWarnings("deprecation")
 public class GameObject extends Observable {
 
     double x, y;

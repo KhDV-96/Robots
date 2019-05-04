@@ -20,8 +20,7 @@ public class Robot extends GameObject {
         return direction;
     }
 
-    void update(Map map) {
-        var target = map.getTarget();
+    void update(Map map, GameObject target) {
         if (MathUtils.distance(x, y, target.x, target.y) >= RADIUS) {
             moveToTarget(target);
             setChanged();

@@ -1,8 +1,6 @@
 package gui;
 
-import game.Map;
-import game.Robot;
-import game.Target;
+import game.Game;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,12 +16,10 @@ import static java.lang.Math.round;
 
 public class GameVisualizer extends JPanel {
 
-    private final Map map;
+    private final Game game;
 
-    GameVisualizer() {
-        map = new Map(500, 500);
-        map.setRobot(new Robot(100, 100, 0));
-        map.setTarget(new Target(150, 100));
+    GameVisualizer(Game game) {
+        this.game = game;
 
         var timer = new Timer("Events generator", true);
         timer.schedule(new TimerTask() {
@@ -35,8 +31,8 @@ public class GameVisualizer extends JPanel {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                synchronized (map) {
-                    map.update();
+                synchronized (game) {
+                    game.update();
                 }
             }
         }, 0, 10);
@@ -44,8 +40,8 @@ public class GameVisualizer extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                synchronized (map) {
-                    map.getTarget().move(e.getX(), e.getY());
+                synchronized (game) {
+                    game.getTarget().move(e.getX(), e.getY());
                 }
                 repaint();
             }
@@ -53,9 +49,9 @@ public class GameVisualizer extends JPanel {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                synchronized (map) {
-                    map.setWidth(e.getComponent().getWidth());
-                    map.setHeight(e.getComponent().getHeight());
+                synchronized (game) {
+                    game.getMap().setWidth(getWidth());
+                    game.getMap().setHeight(getHeight());
                 }
             }
         });
@@ -67,12 +63,12 @@ public class GameVisualizer extends JPanel {
     public void paint(Graphics g) {
         super.paint(g);
         double robotX, robotY, robotDirection, targetX, targetY;
-        synchronized (map) {
-            robotX = map.getRobot().getX();
-            robotY = map.getRobot().getY();
-            robotDirection = map.getRobot().getDirection();
-            targetX = map.getTarget().getX();
-            targetY = map.getTarget().getY();
+        synchronized (game) {
+            robotX = game.getRobot().getX();
+            robotY = game.getRobot().getY();
+            robotDirection = game.getRobot().getDirection();
+            targetX = game.getTarget().getX();
+            targetY = game.getTarget().getY();
         }
         var g2d = (Graphics2D) g;
         drawRobot(g2d, (int) round(robotX), (int) round(robotY), robotDirection);
