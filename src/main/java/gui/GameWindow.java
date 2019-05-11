@@ -1,16 +1,17 @@
 package gui;
 
+import localization.LanguageManager;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class GameWindow extends JInternalFrame implements Disposable {
 
-    public GameWindow() {
-        super("Игровое поле", true, true, true, true);
-        var visualizer = new GameVisualizer();
-        var panel = new JPanel(new BorderLayout());
-        panel.add(visualizer, BorderLayout.CENTER);
-        getContentPane().add(panel);
+    public GameWindow(LanguageManager languageManager) {
+        super(null, true, true, true, true);
+        languageManager.bindField("gameWindow.title", this::setTitle);
+
+        getContentPane().add(new GameVisualizer(), BorderLayout.CENTER);
         pack();
     }
 

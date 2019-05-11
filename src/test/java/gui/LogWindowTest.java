@@ -1,5 +1,6 @@
 package gui;
 
+import localization.LanguageManager;
 import log.LogWindowSource;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +14,7 @@ class LogWindowTest {
     void registerWhenCreating() {
         var logSource = spy(new LogWindowSource(10));
 
-        var window = new LogWindow(logSource);
+        var window = new LogWindow(logSource, mock(LanguageManager.class));
 
         verify(logSource, times(1)).registerListener(window);
     }
@@ -21,7 +22,7 @@ class LogWindowTest {
     @Test
     void unregisterWhenClosing() {
         var logSource = spy(new LogWindowSource(10));
-        var window = new LogWindow(logSource);
+        var window = new LogWindow(logSource, mock(LanguageManager.class));
 
         window.doDefaultCloseAction();
 
@@ -31,7 +32,7 @@ class LogWindowTest {
     @Test
     void unregisterCanceled() {
         var logSource = spy(new LogWindowSource(10));
-        var window = new LogWindow(logSource);
+        var window = new LogWindow(logSource, mock(LanguageManager.class));
         window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
         window.doDefaultCloseAction();

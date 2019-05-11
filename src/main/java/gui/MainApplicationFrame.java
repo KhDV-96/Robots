@@ -1,5 +1,6 @@
 package gui;
 
+import localization.LanguageManager;
 import log.Logger;
 import serialization.WindowStorage;
 
@@ -10,16 +11,18 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
 
 public class MainApplicationFrame extends JFrame implements Disposable {
 
+    private static final Locale LOCALE_RU = new Locale("ru");
     private static final int INSET = 50;
 
     private WindowStorage storage;
     private JInternalFrame logWindow, gameWindow;
 
-    public MainApplicationFrame(WindowStorage storage) {
-        this();
+    public MainApplicationFrame(WindowStorage storage, LanguageManager languageManager) {
+        this(languageManager);
         this.storage = storage;
         if (storage != null && storage.isRestored()) {
             storage.restore(this.getClass().toString(), this);
@@ -31,25 +34,25 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         }
     }
 
-    public MainApplicationFrame() {
+    public MainApplicationFrame(LanguageManager languageManager) {
         var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(INSET, INSET, screenSize.width - INSET * 2, screenSize.height - INSET * 2);
         setContentPane(new JDesktopPane());
-        setJMenuBar(generateMenuBar());
+        setJMenuBar(generateMenuBar(languageManager));
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                onClose(MainApplicationFrame.this);
+                onClose(languageManager, MainApplicationFrame.this);
             }
         });
 
-        logWindow = createLogWindow();
+        logWindow = createLogWindow(languageManager);
         addWindow(logWindow);
         setMinimumSize(logWindow.getSize());
         Logger.debug("Протокол работает");
 
-        gameWindow = createGameWindow();
+        gameWindow = createGameWindow(languageManager);
         addWindow(gameWindow);
     }
 
@@ -64,8 +67,8 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         }
     }
 
-    private LogWindow createLogWindow() {
-        var logWindow = new LogWindow(Logger.getDefaultLogSource());
+    private LogWindow createLogWindow(LanguageManager languageManager) {
+        var logWindow = new LogWindow(Logger.getDefaultLogSource(), languageManager);
         logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
         logWindow.pack();
@@ -73,20 +76,20 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         logWindow.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(logWindow);
+                onClose(languageManager, logWindow);
             }
         });
         return logWindow;
     }
 
-    private GameWindow createGameWindow() {
-        var gameWindow = new GameWindow();
+    private GameWindow createGameWindow(LanguageManager languageManager) {
+        var gameWindow = new GameWindow(languageManager);
         gameWindow.setSize(400, 400);
         gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(gameWindow);
+                onClose(languageManager, gameWindow);
             }
         });
         return gameWindow;
@@ -96,10 +99,19 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         add(frame).setVisible(true);
     }
 
-    private JMenuBar generateMenuBar() {
+    private JMenuBar generateMenuBar(LanguageManager languageManager) {
         var menuBar = new JMenuBar();
 
-        var lookAndFeelMenu = new MenuBuilder("Режим отображения")
+        var fileMenu = new MenuBuilder(languageManager)
+                .setText("Файл")
+                .setMnemonic(KeyEvent.VK_F)
+                .addMenuItem("Выход", KeyEvent.VK_Q,
+                        e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
+                .build();
+        menuBar.add(fileMenu);
+
+        var lookAndFeelMenu = new MenuBuilder(languageManager)
+                .setText("Режим отображения")
                 .setMnemonic(KeyEvent.VK_S)
                 .setDescription("Управление режимом отображения приложения")
                 .addMenuItem("Системная схема", KeyEvent.VK_S,
@@ -107,30 +119,40 @@ public class MainApplicationFrame extends JFrame implements Disposable {
                 .addMenuItem("Универсальная схема", KeyEvent.VK_S,
                         e -> setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()))
                 .build();
+        menuBar.add(lookAndFeelMenu);
 
-        var testMenu = new MenuBuilder("Тесты")
+        var testMenu = new MenuBuilder(languageManager)
+                .setText("Тесты")
                 .setMnemonic(KeyEvent.VK_S)
                 .setDescription("Тестовые команды")
-                .addMenuItem("Сообщение в лог", KeyEvent.VK_S,
-                        e -> Logger.debug("Новая строка"))
+                .addMenuItem("Сообщение в лог", KeyEvent.VK_S, e -> Logger.debug("Новая строка"))
                 .build();
-
-        var fileMenu = new MenuBuilder("Файл")
-                .setMnemonic(KeyEvent.VK_F)
-                .addMenuItem("Выход", KeyEvent.VK_Q,
-                        e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
-                .build();
-
-        menuBar.add(fileMenu);
-        menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
+
+        var languageMenu = new MenuBuilder(languageManager)
+                .setText("languageMenu.text")
+                .addMenuItem("languageMenu.english", KeyEvent.VK_E,
+                        e -> languageManager.changeLocale(Locale.ENGLISH))
+                .addMenuItem("languageMenu.russian", KeyEvent.VK_R,
+                        e -> languageManager.changeLocale(LOCALE_RU))
+                .build();
+        menuBar.add(languageMenu);
+
         return menuBar;
     }
 
-    private void onClose(Disposable disposable) {
-        int confirmed = JOptionPane.showConfirmDialog(this,
-                "Вы точно хотите выйти?",
-                "Выход", JOptionPane.YES_NO_OPTION);
+    private void onClose(LanguageManager languageManager, Disposable disposable) {
+        int confirmed = JOptionPane.showOptionDialog(this,
+                languageManager.getString("confirmDialog.message"),
+                languageManager.getString("confirmDialog.title"),
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new Object[]{
+                        languageManager.getString("confirmDialog.yes"),
+                        languageManager.getString("confirmDialog.no")
+                },
+                JOptionPane.NO_OPTION);
 
         if (confirmed == JOptionPane.YES_OPTION) {
             disposable.onDispose();

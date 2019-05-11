@@ -1,5 +1,6 @@
 package gui;
 
+import localization.LanguageManager;
 import serialization.WindowStorage;
 
 import javax.swing.*;
@@ -7,6 +8,7 @@ import javax.swing.*;
 public class RobotsProgram {
 
     private static final String WINDOW_PATH = "window.ser";
+    private static final String RESOURCES_NAME = "Resources";
 
     public static void main(String[] args) {
         try {
@@ -18,6 +20,7 @@ public class RobotsProgram {
             exception.printStackTrace();
         }
         var storage = new WindowStorage(WINDOW_PATH);
-        SwingUtilities.invokeLater(() -> new MainApplicationFrame(storage).setVisible(true));
+        var languageManager = new LanguageManager(RESOURCES_NAME);
+        SwingUtilities.invokeLater(() -> new MainApplicationFrame(storage, languageManager).setVisible(true));
     }
 }

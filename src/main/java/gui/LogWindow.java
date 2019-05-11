@@ -1,5 +1,6 @@
 package gui;
 
+import localization.LanguageManager;
 import log.LogChangeListener;
 import log.LogWindowSource;
 
@@ -13,13 +14,12 @@ public class LogWindow extends JInternalFrame implements LogChangeListener, Disp
     private LogWindowSource logSource;
     private TextArea logContent;
 
-    public LogWindow(LogWindowSource logSource) {
-        super("Протокол работы", true, true, true, true);
+    public LogWindow(LogWindowSource logSource, LanguageManager languageManager) {
+        super(null, true, true, true, true);
+        languageManager.bindField("logWindow.title", this::setTitle);
+
         this.logSource = logSource;
         this.logSource.registerListener(this);
-
-        logContent = new TextArea("");
-        logContent.setSize(200, 500);
 
         addInternalFrameListener(new InternalFrameAdapter() {
             @Override
@@ -28,9 +28,10 @@ public class LogWindow extends JInternalFrame implements LogChangeListener, Disp
             }
         });
 
-        var panel = new JPanel(new BorderLayout());
-        panel.add(logContent, BorderLayout.CENTER);
-        getContentPane().add(panel);
+        logContent = new TextArea();
+        logContent.setSize(200, 500);
+
+        getContentPane().add(logContent, BorderLayout.CENTER);
         pack();
         updateLogContent();
     }
