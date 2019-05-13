@@ -17,7 +17,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     private static final int INSET = 50;
 
     private WindowStorage storage;
-    private JInternalFrame logWindow, gameWindow;
+    private JInternalFrame logWindow, gameWindow, coordWindow;
 
     public MainApplicationFrame(WindowStorage storage) {
         this();
@@ -26,6 +26,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             storage.restore(this.getClass().toString(), this);
             storage.restore(logWindow.getClass().toString(), logWindow);
             storage.restore(gameWindow.getClass().toString(), gameWindow);
+            storage.restore(coordWindow.getClass().toString(), coordWindow);
         } else {
             setExtendedState(Frame.MAXIMIZED_BOTH);
             pack();
@@ -54,6 +55,9 @@ public class MainApplicationFrame extends JFrame implements Disposable {
 
         gameWindow = createGameWindow(game);
         addWindow(gameWindow);
+
+        coordWindow = createCoordinatesWindow(game);
+        addWindow(coordWindow);
     }
 
     @Override
@@ -63,6 +67,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             storage.store(this.getClass().toString(), this);
             storage.store(logWindow.getClass().toString(), logWindow);
             storage.store(gameWindow.getClass().toString(), gameWindow);
+            storage.store(coordWindow.getClass().toString(), coordWindow);
             storage.save();
         }
     }
@@ -93,6 +98,19 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             }
         });
         return gameWindow;
+    }
+
+    private ObservationWindow createCoordinatesWindow(Game game){
+        var coordWindow = new ObservationWindow(game);
+        coordWindow.setSize(200, 150);
+        coordWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        coordWindow.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                onClose(coordWindow);
+            }
+        });
+        return coordWindow;
     }
 
     private void addWindow(JInternalFrame frame) {
