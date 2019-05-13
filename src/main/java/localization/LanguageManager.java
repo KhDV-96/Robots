@@ -25,12 +25,7 @@ public class LanguageManager {
     }
 
     public String getString(String key) {
-        // TODO: delete this try-catch after completion of the translation
-        try {
-            return resourceBundle.getString(key);
-        } catch (MissingResourceException exception) {
-            return "ERROR";
-        }
+        return resourceBundle.getString(key);
     }
 
     public void changeLocale(Locale locale) {

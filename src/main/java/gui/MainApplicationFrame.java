@@ -103,29 +103,29 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         var menuBar = new JMenuBar();
 
         var fileMenu = new MenuBuilder(languageManager)
-                .setText("Файл")
+                .setText("fileMenu.text")
                 .setMnemonic(KeyEvent.VK_F)
-                .addMenuItem("Выход", KeyEvent.VK_Q,
+                .addMenuItem("fileMenu.exit", KeyEvent.VK_Q, 
                         e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
                 .build();
         menuBar.add(fileMenu);
 
         var lookAndFeelMenu = new MenuBuilder(languageManager)
-                .setText("Режим отображения")
+                .setText("lookAndFeelMenu.text")
                 .setMnemonic(KeyEvent.VK_S)
-                .setDescription("Управление режимом отображения приложения")
-                .addMenuItem("Системная схема", KeyEvent.VK_S,
+                .setDescription("lookAndFeelMenu.description")
+                .addMenuItem("lookAndFeelMenu.system", KeyEvent.VK_S,
                         e -> setLookAndFeel(UIManager.getSystemLookAndFeelClassName()))
-                .addMenuItem("Универсальная схема", KeyEvent.VK_S,
+                .addMenuItem("lookAndFeelMenu.universal", KeyEvent.VK_S,
                         e -> setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()))
                 .build();
         menuBar.add(lookAndFeelMenu);
 
         var testMenu = new MenuBuilder(languageManager)
-                .setText("Тесты")
+                .setText("testMenu.text")
                 .setMnemonic(KeyEvent.VK_S)
-                .setDescription("Тестовые команды")
-                .addMenuItem("Сообщение в лог", KeyEvent.VK_S, e -> Logger.debug("Новая строка"))
+                .setDescription("testMenu.description")
+                .addMenuItem("testMenu.sendMessage", KeyEvent.VK_S, e -> Logger.debug("новая строка"))
                 .build();
         menuBar.add(testMenu);
 
