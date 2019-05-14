@@ -1,60 +1,38 @@
 package gui;
 
-import game.Game;
+import game.GameObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Observable;
 
-
+@SuppressWarnings("deprecation")
 public class ObservationWindow extends JInternalFrame implements Disposable {
 
-    private Game game;
-    private double X;
-    private double Y;
+    private GameObject gameObject;
+    private JTextArea textArea;
 
-    ObservationWindow(Game game) {
+    ObservationWindow(GameObject gameObject) {
         super("Координаты", true, true, true, true);
-        var panel = createPanel(game);
-        getContentPane().add(panel);
+        this.gameObject = gameObject;
+
+        textArea = new JTextArea();
+        textArea.setFont(new Font("Consolas", Font.PLAIN, 17));
+        textArea.setEditable(false);
+
+        gameObject.addObserver(this::update);
+
+        getContentPane().add(textArea);
         pack();
-        setVisible(true);
-    }
-
-    private JPanel createPanel(Game game) {
-        var robot = game.getRobot();
-        var panel = new JPanel();
-        panel.setLayout(new GridLayout(2,2));
-
-        var xLabel = new CoordsJLabel();
-        xLabel.setText("    X: ");
-        var yLabel = new CoordsJLabel();
-        yLabel.setText("    Y: ");
-
-        var x_value = new CoordsJLabel();
-        var y_value = new CoordsJLabel();
-        x_value.setText(String.valueOf(robot.getX()));
-        y_value.setText(String.valueOf(robot.getY()));
-
-        panel.add(xLabel);
-        panel.add(x_value);
-        panel.add(yLabel);
-        panel.add(y_value);
-        return panel;
     }
 
     @Override
     public void onDispose() {
+        gameObject.deleteObserver(this::update);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
-    private class CoordsJLabel extends JLabel {
-        CoordsJLabel() {
-            super();
-            setOpaque(true);
-        }
-
-        protected void paintComponent(Graphics gr) {
-            super.paintComponent(gr);
-        }
+    private void update(Observable o, Object arg) {
+        textArea.setText(String.format("X: %.2f\nY: %.2f", gameObject.getX(), gameObject.getY()));
     }
 }
