@@ -1,6 +1,7 @@
 package gui;
 
 import game.GameObject;
+import localization.LanguageManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,8 +13,9 @@ public class ObservationWindow extends JInternalFrame implements Disposable {
     private GameObject gameObject;
     private JTextArea textArea;
 
-    ObservationWindow(GameObject gameObject) {
-        super("Координаты", true, true, true, true);
+    ObservationWindow(LanguageManager languageManager, GameObject gameObject) {
+        super(null, true, true, true, true);
+        languageManager.bindField("observationWindow.title", this::setTitle);
         this.gameObject = gameObject;
 
         textArea = new JTextArea();
@@ -33,6 +35,8 @@ public class ObservationWindow extends JInternalFrame implements Disposable {
     }
 
     private void update(Observable o, Object arg) {
-        textArea.setText(String.format("X: %.2f\nY: %.2f", gameObject.getX(), gameObject.getY()));
+        SwingUtilities.invokeLater(
+                () -> textArea.setText(String.format("X: %.2f\nY: %.2f", gameObject.getX(), gameObject.getY()))
+        );
     }
 }

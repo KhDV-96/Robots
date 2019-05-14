@@ -104,7 +104,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     }
 
     private ObservationWindow createCoordinatesWindow(LanguageManager languageManager, Game game){
-        var coordWindow = new ObservationWindow(game.getRobot());
+        var coordWindow = new ObservationWindow(languageManager, game.getRobot());
         coordWindow.setSize(200, 150);
         coordWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         coordWindow.addInternalFrameListener(new InternalFrameAdapter() {
