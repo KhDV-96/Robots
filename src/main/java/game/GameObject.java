@@ -1,10 +1,13 @@
 package game;
 
-public class GameObject {
+import java.util.Observable;
 
-    protected double x, y;
+@SuppressWarnings("deprecation")
+public class GameObject extends Observable {
 
-    public GameObject(double x, double y) {
+    double x, y;
+
+    GameObject(double x, double y) {
         this.x = x;
         this.y = y;
     }

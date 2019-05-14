@@ -1,5 +1,6 @@
 package gui;
 
+import game.Game;
 import localization.LanguageManager;
 import log.Logger;
 import serialization.WindowStorage;
@@ -19,7 +20,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     private static final int INSET = 50;
 
     private WindowStorage storage;
-    private JInternalFrame logWindow, gameWindow;
+    private JInternalFrame logWindow, gameWindow, coordWindow;
 
     public MainApplicationFrame(WindowStorage storage, LanguageManager languageManager) {
         this(languageManager);
@@ -28,6 +29,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             storage.restore(this.getClass().toString(), this);
             storage.restore(logWindow.getClass().toString(), logWindow);
             storage.restore(gameWindow.getClass().toString(), gameWindow);
+            storage.restore(coordWindow.getClass().toString(), coordWindow);
         } else {
             setExtendedState(Frame.MAXIMIZED_BOTH);
             pack();
@@ -52,8 +54,13 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         setMinimumSize(logWindow.getSize());
         Logger.debug("Протокол работает");
 
-        gameWindow = createGameWindow(languageManager);
+        var game = new Game();
+
+        gameWindow = createGameWindow(languageManager, game);
         addWindow(gameWindow);
+
+        coordWindow = createCoordinatesWindow(languageManager, game);
+        addWindow(coordWindow);
     }
 
     @Override
@@ -63,6 +70,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             storage.store(this.getClass().toString(), this);
             storage.store(logWindow.getClass().toString(), logWindow);
             storage.store(gameWindow.getClass().toString(), gameWindow);
+            storage.store(coordWindow.getClass().toString(), coordWindow);
             storage.save();
         }
     }
@@ -82,8 +90,8 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         return logWindow;
     }
 
-    private GameWindow createGameWindow(LanguageManager languageManager) {
-        var gameWindow = new GameWindow(languageManager);
+    private GameWindow createGameWindow(LanguageManager languageManager, Game game) {
+        var gameWindow = new GameWindow(languageManager, game);
         gameWindow.setSize(400, 400);
         gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
@@ -93,6 +101,19 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             }
         });
         return gameWindow;
+    }
+
+    private ObservationWindow createCoordinatesWindow(LanguageManager languageManager, Game game){
+        var coordWindow = new ObservationWindow(game.getRobot());
+        coordWindow.setSize(200, 150);
+        coordWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        coordWindow.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                onClose(languageManager, coordWindow);
+            }
+        });
+        return coordWindow;
     }
 
     private void addWindow(JInternalFrame frame) {
@@ -105,7 +126,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         var fileMenu = new MenuBuilder(languageManager)
                 .setText("fileMenu.text")
                 .setMnemonic(KeyEvent.VK_F)
-                .addMenuItem("fileMenu.exit", KeyEvent.VK_Q, 
+                .addMenuItem("fileMenu.exit", KeyEvent.VK_Q,
                         e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
                 .build();
         menuBar.add(fileMenu);
