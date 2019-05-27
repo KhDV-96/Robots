@@ -12,7 +12,11 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Arrays;
+import java.io.File;
+
 
 public class MainApplicationFrame extends JFrame implements Disposable {
 
@@ -116,6 +120,23 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         return coordWindow;
     }
 
+    private void loadFiles() {
+        var paths = new ArrayList<String>();
+        var file_chooser = Chooser.getChooser();
+        int returnValue = file_chooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File[] files = file_chooser.getSelectedFiles();
+            Arrays.asList(files).forEach(x -> {
+                if (x.isFile()) { paths.add(x.getAbsolutePath());}
+            });
+        }
+        doSmthWithFiles(paths);
+    }
+
+    private void doSmthWithFiles(ArrayList<String>paths){
+        //do something
+    }
+
     private void addWindow(JInternalFrame frame) {
         add(frame).setVisible(true);
     }
@@ -128,6 +149,8 @@ public class MainApplicationFrame extends JFrame implements Disposable {
                 .setMnemonic(KeyEvent.VK_F)
                 .addMenuItem("fileMenu.exit", KeyEvent.VK_Q,
                         e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
+                .addMenuItem("fileMenu.select", KeyEvent.VK_Q,
+                        e-> loadFiles())
                 .build();
         menuBar.add(fileMenu);
 
