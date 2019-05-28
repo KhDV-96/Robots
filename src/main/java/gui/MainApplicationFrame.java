@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.Locale;
 
 import static utils.ReflectionUtils.createInstance;
@@ -93,9 +94,9 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         return logWindow;
     }
 
-    private void loadGameWindows(LanguageManager languageManager, String... paths) {
+    private void loadGameWindows(LanguageManager languageManager, File... jars) {
         try {
-            var loader = new JarClassLoader(paths);
+            var loader = new JarClassLoader(jars);
             var gameWindowClass = loader.loadClass("gui.GameWindow");
             var coordinatesWindowClass = loader.loadClass("gui.ObservationWindow");
             var game = createInstance(loader.loadClass("game.Game"));
