@@ -14,7 +14,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static utils.ReflectionUtils.createInstance;
 import static utils.ReflectionUtils.invokeMethod;
@@ -25,7 +27,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     private static final int INSET = 50;
 
     private WindowStorage storage;
-    private JInternalFrame logWindow, gameWindow, coordWindow;
+    private Map<String, JInternalFrame> internalFrames;
     private FileChooser fileChooser;
 
     public MainApplicationFrame(WindowStorage storage, LanguageManager languageManager) {
@@ -33,13 +35,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         this.storage = storage;
         if (storage != null && storage.isRestored()) {
             storage.restore(this.getClass().toString(), this);
-            storage.restore(logWindow.getClass().toString(), logWindow);
-            if (gameWindow != null) {
-                storage.restore(gameWindow.getClass().toString(), gameWindow);
-            }
-            if (coordWindow != null) {
-                storage.restore(coordWindow.getClass().toString(), coordWindow);
-            }
+            internalFrames.forEach(storage::restore);
         } else {
             setExtendedState(Frame.MAXIMIZED_BOTH);
             pack();
@@ -47,6 +43,8 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     }
 
     public MainApplicationFrame(LanguageManager languageManager) {
+        internalFrames = new HashMap<>();
+
         var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(INSET, INSET, screenSize.width - INSET * 2, screenSize.height - INSET * 2);
         setContentPane(new JDesktopPane());
@@ -59,7 +57,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             }
         });
 
-        logWindow = createLogWindow(languageManager);
+        var logWindow = createLogWindow(languageManager);
         addWindow(logWindow);
         setMinimumSize(logWindow.getSize());
         Logger.debug("Протокол работает");
@@ -73,13 +71,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         if (storage != null) {
             storage.store(this.getClass().toString(), this);
-            storage.store(logWindow.getClass().toString(), logWindow);
-            if (gameWindow != null) {
-                storage.store(gameWindow.getClass().toString(), gameWindow);
-            }
-            if (coordWindow != null) {
-                storage.store(coordWindow.getClass().toString(), coordWindow);
-            }
+            internalFrames.forEach(storage::store);
             storage.save();
         }
     }
@@ -107,8 +99,8 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             var game = createInstance(loader.loadClass("game.Game"));
             var gameObject = invokeMethod(game, "getRobot");
 
-            gameWindow = createGameWindow(gameWindowClass, languageManager, game);
-            coordWindow = createCoordinatesWindow(coordinatesWindowClass, languageManager, gameObject);
+            var gameWindow = createGameWindow(gameWindowClass, languageManager, game);
+            var coordWindow = createCoordinatesWindow(coordinatesWindowClass, languageManager, gameObject);
 
             addWindow(gameWindow);
             addWindow(coordWindow);
@@ -120,7 +112,6 @@ public class MainApplicationFrame extends JFrame implements Disposable {
                     JOptionPane.ERROR_MESSAGE
             );
             exception.printStackTrace();
-            gameWindow = coordWindow = null;
         }
     }
 
@@ -160,6 +151,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     }
 
     private void addWindow(JInternalFrame frame) {
+        internalFrames.put(frame.getClass().toString(), frame);
         add(frame).setVisible(true);
     }
 
