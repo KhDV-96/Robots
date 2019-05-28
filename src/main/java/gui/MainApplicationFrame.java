@@ -8,14 +8,12 @@ import serialization.WindowStorage;
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Arrays;
-import java.io.File;
 
 
 public class MainApplicationFrame extends JFrame implements Disposable {
@@ -25,6 +23,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
 
     private WindowStorage storage;
     private JInternalFrame logWindow, gameWindow, coordWindow;
+    private FileChooser fileChooser;
 
     public MainApplicationFrame(WindowStorage storage, LanguageManager languageManager) {
         this(languageManager);
@@ -65,6 +64,9 @@ public class MainApplicationFrame extends JFrame implements Disposable {
 
         coordWindow = createCoordinatesWindow(languageManager, game);
         addWindow(coordWindow);
+
+        var filter = new FileNameExtensionFilter("Jar", "jar");
+        fileChooser = new FileChooser(languageManager, filter, FileChooser.FILES_ONLY);
     }
 
     @Override
@@ -107,7 +109,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         return gameWindow;
     }
 
-    private ObservationWindow createCoordinatesWindow(LanguageManager languageManager, Game game){
+    private ObservationWindow createCoordinatesWindow(LanguageManager languageManager, Game game) {
         var coordWindow = new ObservationWindow(languageManager, game.getRobot());
         coordWindow.setSize(200, 150);
         coordWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -121,20 +123,10 @@ public class MainApplicationFrame extends JFrame implements Disposable {
     }
 
     private void loadFiles() {
-        var paths = new ArrayList<String>();
-        var file_chooser = Chooser.getChooser();
-        int returnValue = file_chooser.showOpenDialog(null);
+        var returnValue = fileChooser.showOpenDialog(null);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            File[] files = file_chooser.getSelectedFiles();
-            Arrays.asList(files).forEach(x -> {
-                if (x.isFile()) { paths.add(x.getAbsolutePath());}
-            });
+            var files = fileChooser.getSelectedFiles();
         }
-        doSmthWithFiles(paths);
-    }
-
-    private void doSmthWithFiles(ArrayList<String>paths){
-        //do something
     }
 
     private void addWindow(JInternalFrame frame) {
@@ -147,10 +139,10 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         var fileMenu = new MenuBuilder(languageManager)
                 .setText("fileMenu.text")
                 .setMnemonic(KeyEvent.VK_F)
+                .addMenuItem("fileMenu.select", KeyEvent.VK_Q,
+                        e -> loadFiles())
                 .addMenuItem("fileMenu.exit", KeyEvent.VK_Q,
                         e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
-                .addMenuItem("fileMenu.select", KeyEvent.VK_Q,
-                        e-> loadFiles())
                 .build();
         menuBar.add(fileMenu);
 
