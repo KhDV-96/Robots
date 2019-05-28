@@ -1,6 +1,6 @@
 package gui;
 
-import game.Game;
+import loaders.JarClassLoader;
 import localization.LanguageManager;
 import log.Logger;
 import serialization.WindowStorage;
@@ -13,8 +13,11 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.Locale;
 
+import static utils.ReflectionUtils.createInstance;
+import static utils.ReflectionUtils.invokeMethod;
 
 public class MainApplicationFrame extends JFrame implements Disposable {
 
@@ -31,8 +34,12 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         if (storage != null && storage.isRestored()) {
             storage.restore(this.getClass().toString(), this);
             storage.restore(logWindow.getClass().toString(), logWindow);
-            storage.restore(gameWindow.getClass().toString(), gameWindow);
-            storage.restore(coordWindow.getClass().toString(), coordWindow);
+            if (gameWindow != null) {
+                storage.restore(gameWindow.getClass().toString(), gameWindow);
+            }
+            if (coordWindow != null) {
+                storage.restore(coordWindow.getClass().toString(), coordWindow);
+            }
         } else {
             setExtendedState(Frame.MAXIMIZED_BOTH);
             pack();
@@ -57,14 +64,6 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         setMinimumSize(logWindow.getSize());
         Logger.debug("Протокол работает");
 
-        var game = new Game();
-
-        gameWindow = createGameWindow(languageManager, game);
-        addWindow(gameWindow);
-
-        coordWindow = createCoordinatesWindow(languageManager, game);
-        addWindow(coordWindow);
-
         var filter = new FileNameExtensionFilter("Jar", "jar");
         fileChooser = new FileChooser(languageManager, filter, FileChooser.FILES_ONLY);
     }
@@ -75,8 +74,12 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         if (storage != null) {
             storage.store(this.getClass().toString(), this);
             storage.store(logWindow.getClass().toString(), logWindow);
-            storage.store(gameWindow.getClass().toString(), gameWindow);
-            storage.store(coordWindow.getClass().toString(), coordWindow);
+            if (gameWindow != null) {
+                storage.store(gameWindow.getClass().toString(), gameWindow);
+            }
+            if (coordWindow != null) {
+                storage.store(coordWindow.getClass().toString(), coordWindow);
+            }
             storage.save();
         }
     }
@@ -96,27 +99,49 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         return logWindow;
     }
 
-    private GameWindow createGameWindow(LanguageManager languageManager, Game game) {
-        var gameWindow = new GameWindow(languageManager, game);
+    private void loadGameWindows(LanguageManager languageManager, File... jars) {
+        try {
+            var loader = new JarClassLoader(jars);
+            var gameWindowClass = loader.loadClass("gui.GameWindow");
+            var coordinatesWindowClass = loader.loadClass("gui.ObservationWindow");
+            var game = createInstance(loader.loadClass("game.Game"));
+            var gameObject = invokeMethod(game, "getRobot");
+
+            gameWindow = createGameWindow(gameWindowClass, languageManager, game);
+            coordWindow = createCoordinatesWindow(coordinatesWindowClass, languageManager, gameObject);
+
+            addWindow(gameWindow);
+            addWindow(coordWindow);
+        } catch (Exception exception) {
+            // TODO: выводить ошибку в виде окошка с сообщением
+            exception.printStackTrace();
+            gameWindow = coordWindow = null;
+        }
+    }
+
+    private JInternalFrame createGameWindow(Class<?> windowClass, LanguageManager languageManager, Object game)
+            throws ReflectiveOperationException {
+        var gameWindow = (JInternalFrame) createInstance(windowClass, languageManager, game);
         gameWindow.setSize(400, 400);
         gameWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         gameWindow.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(languageManager, gameWindow);
+                onClose(languageManager, (Disposable) gameWindow);
             }
         });
         return gameWindow;
     }
 
-    private ObservationWindow createCoordinatesWindow(LanguageManager languageManager, Game game) {
-        var coordWindow = new ObservationWindow(languageManager, game.getRobot());
+    private JInternalFrame createCoordinatesWindow(Class<?> windowClass, LanguageManager languageManager, Object gameObject)
+            throws ReflectiveOperationException {
+        var coordWindow = (JInternalFrame) createInstance(windowClass, languageManager, gameObject);
         coordWindow.setSize(200, 150);
         coordWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         coordWindow.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
-                onClose(languageManager, coordWindow);
+                onClose(languageManager, (Disposable) coordWindow);
             }
         });
         return coordWindow;
