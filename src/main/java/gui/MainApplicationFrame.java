@@ -113,7 +113,12 @@ public class MainApplicationFrame extends JFrame implements Disposable {
             addWindow(gameWindow);
             addWindow(coordWindow);
         } catch (Exception exception) {
-            // TODO: выводить ошибку в виде окошка с сообщением
+            JOptionPane.showMessageDialog(
+                    this,
+                    languageManager.getString("error.moduleLoading"),
+                    languageManager.getString("error.title"),
+                    JOptionPane.ERROR_MESSAGE
+            );
             exception.printStackTrace();
             gameWindow = coordWindow = null;
         }
@@ -147,10 +152,10 @@ public class MainApplicationFrame extends JFrame implements Disposable {
         return coordWindow;
     }
 
-    private void loadFiles() {
-        var returnValue = fileChooser.showOpenDialog(null);
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            var files = fileChooser.getSelectedFiles();
+    private void loadFiles(LanguageManager languageManager) {
+        var status = fileChooser.showOpenDialog(this);
+        if (status == JFileChooser.APPROVE_OPTION) {
+            loadGameWindows(languageManager, fileChooser.getSelectedFiles());
         }
     }
 
@@ -165,7 +170,7 @@ public class MainApplicationFrame extends JFrame implements Disposable {
                 .setText("fileMenu.text")
                 .setMnemonic(KeyEvent.VK_F)
                 .addMenuItem("fileMenu.select", KeyEvent.VK_Q,
-                        e -> loadFiles())
+                        e -> loadFiles(languageManager))
                 .addMenuItem("fileMenu.exit", KeyEvent.VK_Q,
                         e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)))
                 .build();
