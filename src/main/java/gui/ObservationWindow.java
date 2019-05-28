@@ -13,7 +13,7 @@ public class ObservationWindow extends JInternalFrame implements Disposable {
     private GameObject gameObject;
     private JTextArea textArea;
 
-    ObservationWindow(LanguageManager languageManager, GameObject gameObject) {
+    public ObservationWindow(LanguageManager languageManager, GameObject gameObject) {
         super(null, true, true, true, true);
         languageManager.bindField("observationWindow.title", this::setTitle);
         this.gameObject = gameObject;
